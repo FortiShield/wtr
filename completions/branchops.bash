@@ -2,43 +2,64 @@
 _branchops() {
   local cur prev opts
   COMPREPLY=()
-  _get_comp_words_by_ref -n : cur prev
+  _get_comp_words_by_ref -n : cur prev 2>/dev/null || return 0
   
   # Available commands
-  local cmds="create remove list open switch edit completions"
+  local cmds="create new remove rm go run editor ai copy ls list dashboard status ui hooks sync exec backup restore clean doctor adapter adapters config help version"
   
-  # Available editors and AI tools from manifest
-  local editors=($(grep -oP 'AVAILABLE_EDITORS=\(\K[^)]+' $DIR/../adapters/manifest.sh | tr ' ' '\n' | tr -d "'" | tr '\n' ' '))
-  local ai_tools=($(grep -oP 'AVAILABLE_AI=\(\K[^)]+' $DIR/../adapters/manifest.sh | tr ' ' '\n' | tr -d "'" | tr '\n' ' '))
+  # Available shells
+  local shells="bash zsh fish"
+
+  # Helper to get available adapters without non-portable grep -oP
+  _get_adapters() {
+    local type="$1"
+    local adapters_dir
+    adapters_dir="$(dirname "${BASH_SOURCE[0]}")/../adapters"
+    if [ -d "$adapters_dir" ]; then
+      find "$adapters_dir" -maxdepth 1 -name "${type}_*.sh" | sed "s|.*/${type}_||;s/\.sh$//" | tr '\n' ' '
+    fi
+  }
+
+  local editors="vscode nvim vim emacs cursor zed idea webstorm atom"
+  local ai_tools="aider claude continue codex"
   
   if [[ ${#COMP_WORDS[@]} -eq 2 ]]; then
     # First argument - complete with commands
     COMPREPLY=($(compgen -W "$cmds" -- "$cur"))
   else
     case "${COMP_WORDS[1]}" in
-      create|open|edit)
+      create|new|editor|ai)
         if [[ $prev == --editor ]]; then
-          COMPREPLY=($(compgen -W "${editors[*]}" -- "$cur"))
+          COMPREPLY=($(compgen -W "$editors" -- "$cur"))
         elif [[ $prev == --ai ]]; then
-          COMPREPLY=($(compgen -W "${ai_tools[*]}" -- "$cur"))
-        elif [[ $prev == --copy ]]; then
-          # Complete with common config files
-          COMPREPLY=($(compgen -W ".env .env.local .env.example config.json" -- "$cur"))
+          COMPREPLY=($(compgen -W "$ai_tools" -- "$cur"))
+        elif [[ $prev == --track ]]; then
+          COMPREPLY=($(compgen -W "auto true false" -- "$cur"))
+        elif [[ $prev == --preset ]]; then
+          # Potentially complete with presets from config
+          COMPREPLY=($(compgen -W "default" -- "$cur"))
         else
-          # Complete with branch names for certain commands
-          if [[ ${COMP_WORDS[1]} == "open" || ${COMP_WORDS[1]} == "switch" || ${COMP_WORDS[1]} == "edit" ]]; then
-            local branches=$(git branch --format='%(refname:short)' 2>/dev/null)
-            COMPREPLY=($(compgen -W "$branches" -- "$cur"))
-          fi
+          # Complete flags
+          local flags="--from --from-current --track --no-copy --no-fetch --yes --force --name --editor -e --ai -a --preset"
+          COMPREPLY=($(compgen -W "$flags" -- "$cur"))
         fi
         ;;
+      remove|rm|go|run|ls|list|status|dashboard|ui|hooks|sync|exec|backup|restore|clean)
+        # Complete with branch names
+        local branches=$(git branch --format='%(refname:short)' 2>/dev/null)
+        COMPREPLY=($(compgen -W "$branches" -- "$cur"))
+        ;;
       completions)
-        COMPREPLY=($(compgen -W "bash zsh fish" -- "$cur"))
+        COMPREPLY=($(compgen -W "$shells" -- "$cur"))
+        ;;
+      config)
+        local config_cmds="get set list unset"
+        COMPREPLY=($(compgen -W "$config_cmds" -- "$cur"))
         ;;
     esac
   fi
   
-  __ltrim_colon_completions "$cur"
+  __ltrim_colon_completions "$cur" 2>/dev/null || true
 }
 
 complete -F _branchops branchops

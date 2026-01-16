@@ -1,0 +1,93 @@
+# Troubleshooting Guide
+
+This guide provides solutions for common issues and answers to frequently asked questions about BranchOps.
+
+## Installation Issues
+
+### `git branchops` is not a git command
+**Symptoms:** Running `git branchops <cmd>` returns `git: 'branchops' is not a git command.`
+
+**Solution:**
+1.  Verify the installation path: `ls -la ~/.local/bin/git-branchops`.
+2.  Ensure `~/.local/bin` is in your `PATH`.
+3.  On macOS, you may need to restart your terminal or run `source ~/.zshrc`.
+4.  Try running the direct binary to see if it works: `~/.branchops/bin/branchops --version`.
+
+### `Permission denied` during installation
+**Symptoms:** `Permission denied` error when running `./install.sh`.
+
+**Solution:**
+1.  Make sure the script is executable: `chmod +x install.sh`.
+2.  If the script tries to create symlinks in `/usr/local/bin` and fails, it should fallback to `~/.local/bin`. Ensure you have write permissions for your home directory.
+
+## Worktree Issues
+
+### `Fatal: ... already exists`
+**Symptoms:** Git fails to create a worktree because a directory or branch already exists.
+
+**Solution:**
+1.  Check if you have an old worktree folder that wasn't properly removed: `git worktree prune`.
+2.  If you want to use the same branch for a different purpose, use the `--force` and `--name` flags:
+    `git branchops new feature-abc --force --name variant-2`
+
+### Branch names with slashes
+**Symptoms:** You want to create a worktree for `feature/login` but the folder name looks strange or fails.
+
+**Solution:**
+BranchOps automatically sanitizes branch names by replacing `/` with `-`. A branch named `feature/login` will be placed in a folder named `feature-login`. This is by design to ensure cross-platform compatibility.
+
+### Worktrees inside the repository
+**Symptoms:** You created a worktree and now `git status` shows it as an untracked directory.
+
+**Solution:**
+By default, BranchOps tries to create worktrees as **sibling directories** (e.g., `../your-repo-worktrees/`). If you prefer them inside your repo (e.g., in a `.worktrees/` folder), you must add that folder to your `.gitignore`:
+```bash
+echo ".worktrees/" >> .gitignore
+git branchops config set branchops.worktrees.dir ".worktrees" --local
+```
+
+## Tool Integration (Editor/AI)
+
+### Editor/AI tool fails to open
+**Symptoms:** Configured tool doesn't launch, but no error is shown.
+
+**Solution:**
+1.  Run `git branchops doctor` to check if the tool is in your `PATH`.
+2.  If you are using a custom editor command, ensure it works from the shell directly.
+3.  Check if you have the correct adapter name. Run `git branchops adapter` to see available options.
+
+### VS Code/Cursor workspace isn't used
+**Symptoms:** VS Code opens the folder but doesn't load the `.code-workspace` file.
+
+**Solution:**
+1.  Ensure the `.code-workspace` file is in the root of your repository.
+2.  Check your config: `git branchops config get branchops.editor.workspace`. It should be empty (for auto-detection) or point to the correct relative path.
+
+## Git Version Issues
+
+### "Unknown option: --show-current"
+**Symptoms:** Errors relating to `branch --show-current`.
+
+**Solution:**
+This occurs on older versions of Git (pre-2.22). BranchOps includes fallbacks for these versions, but ensure your Git is at least version 2.5.0. Updating Git is highly recommended for the best experience.
+
+## Debugging
+
+If you encounter an issue not listed here, you can enable debug logging to see what's happening under the hood:
+
+```bash
+BRANCHOPS_DEBUG=1 git branchops <command>
+```
+
+You can also specify a log file for persistent history:
+```bash
+export BRANCHOPS_LOG_FILE="/tmp/branchops.log"
+git branchops new test-debug
+```
+
+## Getting Help
+
+If you're still stuck:
+1.  Run `git branchops help` for a list of all commands and options.
+2.  Check the documentation in `docs/`.
+3.  Search or open an issue on the [GitHub repository](https://github.com/neopilot-ai/np-branchops).

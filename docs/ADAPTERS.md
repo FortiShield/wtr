@@ -37,6 +37,9 @@ branchops create my-feature --editor=vscode
 # Use an AI tool
 branchops create my-feature --ai=claude
 
+# Use the 'new' alias with flags
+branchops new my-feature --editor=vscode --ai=aider
+
 # Use multiple adapters
 branchops create my-feature --editor=vscode --ai=codex
 ```
