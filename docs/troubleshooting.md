@@ -63,6 +63,21 @@ git branchops config set branchops.worktrees.dir ".worktrees" --local
 1.  Ensure the `.code-workspace` file is in the root of your repository.
 2.  Check your config: `git branchops config get branchops.editor.workspace`. It should be empty (for auto-detection) or point to the correct relative path.
 
+### AI Tool API Keys
+**Symptoms:** Errors like `CLAUDE_API_KEY not set` or `GEMINI_API_KEY not set`.
+
+**Solution:**
+1.  Most AI adapters require an API key to be set in your environment.
+2.  You can export them in your shell profile (`.zshrc` or `.bash_profile`):
+    ```bash
+    export GEMINI_API_KEY="your-key-here"
+    export CLAUDE_API_KEY="your-key-here"
+    ```
+3.  Alternatively, you can create a config file at `~/.config/neopilot/gemini` or `~/.config/neopilot/claude` with the following content:
+    ```bash
+    GEMINI_API_KEY="your-key-here"
+    ```
+
 ## Git Version Issues
 
 ### "Unknown option: --show-current"

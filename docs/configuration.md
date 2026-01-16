@@ -60,7 +60,7 @@ This file uses the standard `git-config` syntax. Example:
 | :--- | :--- | :--- |
 | `branchops.editor.default` | `defaults.editor` | Default editor adapter to use for `new -e` or `editor` commands. |
 | `branchops.editor.workspace` | `editor.workspace` | Path to a `.code-workspace` file (relative to worktree root). Auto-detects if not set. |
-| `branchops.ai.default` | `defaults.ai` | Default AI tool adapter to use for `new -a` or `ai` commands. |
+| `branchops.ai.default` | `defaults.ai` | Default AI tool adapter to use (e.g., `gemini`, `claude`, `cursor`, `aider`). |
 
 ### Copy Patterns (Multi-valued)
 

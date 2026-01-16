@@ -12,8 +12,10 @@ AVAILABLE_EDITORS=(
     "cursor"        # Cursor Editor
     "idea"          # IntelliJ IDEA
     "webstorm"      # WebStorm
+    "pycharm"       # PyCharm
     "atom"          # Atom
     "sublime"       # Sublime Text
+    "nano"          # Nano
 )
 
 # Available AI tools
@@ -23,6 +25,9 @@ AVAILABLE_AI=(
     "continue"      # Continue AI
     "codex"         # OpenAI Codex
     "copilot"       # GitHub Copilot
+    "gemini"        # Google Gemini AI
+    "cursor"        # Cursor AI editor
+    "opencode"      # OpenCode Interpreter
 )
 
 # Verify an adapter exists

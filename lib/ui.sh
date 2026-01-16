@@ -28,16 +28,19 @@ prompt_yes_no() {
 # Open a path in the system's file browser
 open_in_gui() {
   local path="$1"
-  case "$(uname -s)" in
-    Darwin)
+  case "$(detect_os)" in
+    macos)
       open "$path"
       ;;
-    Linux)
+    linux)
       if command -v xdg-open >/dev/null 2>&1; then
         xdg-open "$path"
       else
         log_warn "xdg-open not found, cannot open GUI"
       fi
+      ;;
+    windows)
+      start "" "$path"
       ;;
     *)
       log_warn "Unsupported platform for opening GUI"

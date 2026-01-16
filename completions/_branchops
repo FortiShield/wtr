@@ -42,8 +42,8 @@ _branchops() {
     '--yes[Non-interactive mode]'
     '--force[Force creation]'
     '--name[Custom worktree name]:name'
-    '--editor[Open in editor]'
-    '--ai[Start AI tool]'
+    '--editor[Open in editor]:editor:(vscode vscode_remote nvim vim emacs cursor zed idea webstorm pycharm atom sublime nano)'
+    '--ai[Start AI tool]:ai_tool:(aider claude continue codex copilot gemini cursor opencode)'
     '--preset[Apply preset]:preset'
   )
 

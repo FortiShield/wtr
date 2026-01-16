@@ -55,6 +55,23 @@ log_step "Detecting platform..."
 log_info "OS: $OS"
 log_info "Shell: $SHELL_TYPE"
 
+
+# Handle arguments
+if [ "$1" == "--uninstall" ]; then
+  log_step "Uninstalling BranchOps..."
+  rm -rf "$INSTALL_DIR"
+  rm -f "$BIN_DIR/branchops"
+  rm -f "$BIN_DIR/git-branchops"
+  log_success "Uninstalled successfully."
+  log_info "Please manually remove the BranchOps configuration block from your shell config file." 
+  exit 0
+fi
+
+if [ "$1" == "--upgrade" ]; then
+  log_info "Upgrading BranchOps..."
+  # Just continue, as the script overwrites by default
+fi
+
 # 2. Dependency Checks
 log_step "Checking dependencies..."
 if ! command -v git >/dev/null 2>&1; then
@@ -149,7 +166,7 @@ esac
 
 log_success "BranchOps installed successfully!"
 echo ""
-echo "To started using it, restart your shell or run:"
+echo "To start using it, restart your shell or run:"
 if [ "$SHELL_TYPE" = "fish" ]; then
   echo "  source ~/.config/fish/config.fish"
 else

@@ -102,9 +102,61 @@ git branchops copy feature-auth -- .env.example
 
 # Sync a specific directory to ALL active worktrees
 git branchops copy -a -- "src/types/*"
+# Sync a specific directory to ALL active worktrees
+git branchops copy -a -- "src/types/*"
 ```
 
-## Hygiene & Maintenance
+### Git State Synchronization
+Keep your worktrees up-to-date with remote changes using the `sync` command.
+
+#### Standard Rebase (Default)
+Updates the worktree by rebasing on top of the remote branch:
+```bash
+git branchops sync feature-auth
+```
+
+#### Hard Reset (The "Nuclear Option")
+If a worktree has driften too far or messed up state, force it to match the remote:
+```bash
+git branchops sync --reset feature-auth
+```
+
+
+## 📊 Visual Monitoring
+
+### The Dashboard
+For a quick bird's-eye view of all your active worktrees (their branch, dirty status, and age), use the dashboard:
+
+```bash
+git branchops dashboard
+```
+
+### The Interactive UI
+If you prefer a visual menu to quickly jump between worktrees or perform operations, run the terminal UI:
+
+```bash
+git branchops ui
+```
+
+## 🤖 Advanced AI Agent Workflows
+
+BranchOps is built to coordinate multiple AI agents. Here is a recommended pattern for high-velocity development.
+
+### Pattern: The Parallel Reviewer
+1. Create a variant of your feature branch:
+   `git branchops new feature/api-v2 --force --name agent-review`
+2. Start a specialized agent (like Gemini) to analyze the whole worktree:
+   `git branchops ai agent-review --ai gemini -- analyze`
+3. Continue working in your primary `cursor` worktree while the agent performs its background analysis.
+
+### Pattern: The Multi-Agent Fleet
+Define a preset in your `.branchopsconfig` for a swarm of agents:
+```ini
+[presets]
+    swarm = --ai aider --from-current
+```
+
+Run it multiple times to spin up a fleet of aider agents on different variants of your branch.
 
 ### Merged PR Cleanup
 Once a Pull Request is merged, the worktree and local branch are no longer needed. BranchOps can verify the PR state on GitHub and clean them up for you:
@@ -139,4 +191,12 @@ Chain commands for a "one-touch" setup:
 ```bash
 # Create, open in editor, and start AI in one go
 git branchops new hotfix/urgent && git branchops editor hotfix/urgent && git branchops ai hotfix/urgent
+
+### Hook Synchronization
+If you maintain custom Git hooks (e.g., `pre-commit` or `commit-msg`) in your main repository, you can sync them to all worktrees at once:
+
+```bash
+# Requires .branchops/git-hooks directory in main repo
+git branchops hooks sync
+```
 ```

@@ -10,18 +10,18 @@ _branchops() {
   # Available shells
   local shells="bash zsh fish"
 
-  # Helper to get available adapters without non-portable grep -oP
+  # Helper to get available adapters
   _get_adapters() {
     local type="$1"
     local adapters_dir
-    adapters_dir="$(dirname "${BASH_SOURCE[0]}")/../adapters"
+    adapters_dir="$(dirname "${BASH_SOURCE[0]}")/../adapters/$type"
     if [ -d "$adapters_dir" ]; then
-      find "$adapters_dir" -maxdepth 1 -name "${type}_*.sh" | sed "s|.*/${type}_||;s/\.sh$//" | tr '\n' ' '
+      find "$adapters_dir" -maxdepth 1 -name "*.sh" | sed "s|.*/||;s/\.sh$//" | tr '\n' ' '
     fi
   }
 
-  local editors="vscode nvim vim emacs cursor zed idea webstorm atom"
-  local ai_tools="aider claude continue codex"
+  local editors="vscode vscode_remote nvim vim emacs cursor zed idea webstorm pycharm atom sublime nano"
+  local ai_tools="aider claude continue codex copilot gemini cursor opencode"
   
   if [[ ${#COMP_WORDS[@]} -eq 2 ]]; then
     # First argument - complete with commands

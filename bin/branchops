@@ -932,6 +932,7 @@ cmd_sync() {
       --strategy) strategy="$2"; shift 2 ;;
       --merge) strategy="merge"; shift ;;
       --rebase) strategy="rebase"; shift ;;
+      --reset) strategy="reset"; shift ;;
       -a|--all) all_mode=1; shift ;;
       -*) log_error "Unknown flag: $1"; exit 1 ;;
       *) targets+=("$1"); shift ;;
@@ -968,7 +969,15 @@ cmd_sync() {
       WORKTREE_PATH="$path" \
       BRANCH="$branch" || continue
 
-    if (cd "$path" && git fetch origin && git "$strategy" "origin/$branch"); then
+    # Prepare command
+    local update_cmd=()
+    if [ "$strategy" = "reset" ]; then
+      update_cmd=(git reset --hard "origin/$branch")
+    else
+      update_cmd=(git "$strategy" "origin/$branch")
+    fi
+
+    if (cd "$path" && git fetch origin && "${update_cmd[@]}"); then
       log_success "Synced $branch"
       run_hooks_in postSync "$path" \
         REPO_ROOT="$repo_root" \
@@ -1956,9 +1965,9 @@ CONFIGURATION OPTIONS:
   branchops.worktrees.prefix     Worktree folder prefix (default: "")
   branchops.defaultBranch        Default branch (default: auto)
   branchops.editor.default       Default editor
-                           Options: cursor, vscode, zed, idea, pycharm,
-                           webstorm, vim, nvim, emacs, sublime, nano,
-                           atom, none
+                           Options: cursor, vscode, vscode_remote, zed,
+                           idea, pycharm, webstorm, nvim, vim, emacs,
+                           sublime, atom, nano, none
   branchops.editor.workspace     Workspace file for VS Code/Cursor
                            (relative path, auto-detects, or "none")
   branchops.ai.default           Default AI tool

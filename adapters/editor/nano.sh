@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
-# Atom editor adapter
+# Nano editor adapter
 
 cmd="$1"
 worktree="$2"
 
 case "$cmd" in
     open)
-        if command -v atom >/dev/null 2>&1; then
-            atom "$worktree" >/dev/null 2>&1 &
+        if command -v nano >/dev/null 2>&1; then
+            # Run in current terminal
+            nano "$worktree"
         else
-            echo "Error: atom not found on PATH" >&2
+            echo "Error: nano not found on PATH" >&2
             exit 1
         fi
         ;;

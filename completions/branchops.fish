@@ -37,8 +37,11 @@ complete -c branchops -n "__fish_seen_subcommand_from $create_cmds" -l no-fetch 
 complete -c branchops -n "__fish_seen_subcommand_from $create_cmds" -l yes -d 'Non-interactive'
 complete -c branchops -n "__fish_seen_subcommand_from $create_cmds" -l force -d 'Force'
 complete -c branchops -n "__fish_seen_subcommand_from $create_cmds" -l name -d 'Custom name' -r
-complete -c branchops -n "__fish_seen_subcommand_from $create_cmds" -l editor -d 'Open in editor'
-complete -c branchops -n "__fish_seen_subcommand_from $create_cmds" -l ai -d 'Start AI'
+set -l editors vscode vscode_remote nvim vim emacs cursor zed idea webstorm pycharm atom sublime nano
+set -l ai_tools aider claude continue codex copilot gemini cursor opencode
+
+complete -c branchops -n "__fish_seen_subcommand_from $create_cmds" -l editor -d 'Open in editor' -xa "$editors"
+complete -c branchops -n "__fish_seen_subcommand_from $create_cmds" -l ai -d 'Start AI' -xa "$ai_tools"
 complete -c branchops -n "__fish_seen_subcommand_from $create_cmds" -l preset -d 'Apply preset' -r
 
 # Branch completion

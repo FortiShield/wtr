@@ -8,77 +8,76 @@ The BranchOps adapter system extends the CLI's functionality by adding support f
 
 ### Editors
 
+- `cursor` - Cursor AI Editor (Highly Recommended)
 - `vscode` - Visual Studio Code
 - `vscode_remote` - VS Code with Remote Containers/SSH
+- `zed` - Zed Editor
+- `sublime` - Sublime Text
 - `nvim` - Neovim
 - `vim` - Vim
 - `emacs` - Emacs
-- `zed` - Zed Editor
-- `cursor` - Cursor Editor
 - `idea` - IntelliJ IDEA
 - `webstorm` - WebStorm
+- `pycharm` - PyCharm
 - `atom` - Atom
+- `nano` - Nano Editor
 
 ### AI Tools
 
+- `gemini` - Google Gemini AI (Recommended)
+- `claude` - Anthropic Claude AI
 - `aider` - Aider AI coding assistant
-- `claude` - Claude AI
-- `continue` - Continue AI
+- `copilot` - GitHub Copilot CLI
+- `cursor` - Cursor AI features
+- `opencode` - OpenCode Interpreter
+- `continue` - Continue.dev AI
 - `codex` - OpenAI Codex
 
 ## Using Adapters
 
-### Specifying Adapters
+### Specifying Adapters via Flags
+
+You can specify an adapter directly when creating or opening a worktree:
 
 ```bash
-# Use a specific editor
-branchops create my-feature --editor=vscode
+# Create and open in VS Code
+git branchops new my-feature --editor vscode
 
-# Use an AI tool
-branchops create my-feature --ai=claude
+# Create and start Aider
+git branchops new my-feature --ai aider
 
-# Use the 'new' alias with flags
-branchops new my-feature --editor=vscode --ai=aider
-
-# Use multiple adapters
-branchops create my-feature --editor=vscode --ai=codex
+# Chain them together
+git branchops new my-feature -e -a
 ```
 
-### Configuration
+### Configuration (The Recommended Way)
 
-Adapters can be configured through environment variables or config files:
-
-1. Global config: `~/.config/neopilot/config` 
-2. Project config: `.branchops/config` 
-
-Example configuration:
+Set your defaults once so you don't have to use flags:
 
 ```bash
-# Default editor and AI
-DEFAULT_EDITOR="vscode"
-DEFAULT_AI="claude"
-
-# Adapter-specific settings
-VSCODE_PATH="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
+git branchops config set branchops.editor.default cursor
+git branchops config set branchops.ai.default gemini
 ```
 
 ## Creating Custom Adapters
 
+Adapters are simple Bash scripts located in the `adapters/` directory.
+
 ### Editor Adapters
 
-1. Create a new file in `adapters/editor/` named `{name}_editor.sh` 
-2. Implement the required functions:
+1. Create a new file in `adapters/editor/` named `{name}.sh`.
+2. Implement the `open` command handling:
 
 ```bash
 #!/usr/bin/env bash
 
-# Required: Handle the 'open' command
-# $1 - Command (always 'open' for now)
+# $1 - Command (always 'open' for editors)
 # $2 - Worktree path
+# $3 - Workspace file path (optional, for VS Code/Cursor)
 case "$1" in
     open)
-        # Your code to open the editor
-        # Example: vim "$2"
+        local target="${3:-$2}"
+        my-editor "$target" >/dev/null 2>&1 &
         ;;
     *)
         echo "Unknown command: $1" >&2
@@ -89,117 +88,62 @@ esac
 
 ### AI Adapters
 
-1. Create a new file in `adapters/ai/` named `{name}_ai.sh` 
-2. Implement the required functions:
+1. Create a new file in `adapters/ai/` named `{name}.sh`.
+2. Implement the commands:
 
 ```bash
 #!/usr/bin/env bash
 
-# Required: Handle the 'open' command
 # $1 - Command (open, analyze, etc.)
 # $2 - Worktree path
-case "$1" in
-    open)
-        # Initialize AI session
+# $@ - Remaining arguments passed to the tool
+cmd="$1"
+worktree="$2"
+shift 2
+
+case "$cmd" in
+    open|start)
+        cd "$worktree" && my-ai-tool "$@"
         ;;
     analyze)
-        # Analyze codebase
+        # Optional: Perform codebase analysis
         ;;
     *)
-        echo "Unknown command: $1" >&2
+        echo "Unknown command: $cmd" >&2
         exit 1
         ;;
 esac
 ```
 
-## Advanced Features
+## Environment Variables
 
-### Adapter Hooks
+The following variables can be set in your shell to override configurations:
 
-Adapters can define hooks that run at different stages:
-
-```bash
-# In your adapter script
-run_hook "pre_open" "$worktree_path"
-# Your open logic
-run_hook "post_open" "$worktree_path"
-```
-
-### Environment Variables
-
-- `NEOPILOT_DRY_RUN` - Set to 1 to enable dry-run mode
-- `NEOPILOT_DEBUG` - Enable debug output
-- `NEOPILOT_ASSUME_YES` - Skip confirmation prompts
-
-## Best Practices
-
-1. **Error Handling**: Always check for command existence and fail gracefully
-2. **Idempotency**: Ensure your adapter can be run multiple times safely
-3. **Configuration**: Use environment variables for configuration
-4. **Documentation**: Document your adapter's requirements and options
-5. **Testing**: Test your adapter with different scenarios
-
-## Example: Creating a New Editor Adapter
-
-Let's create a simple adapter for the `micro` editor:
-
-1. Create `adapters/editor/micro_editor.sh`:
-
-```bash
-#!/usr/bin/env bash
-
-case "$1" in
-    open)
-        if ! command -v micro >/dev/null 2>&1; then
-            echo "Error: micro editor not found" >&2
-            exit 1
-        fi
-        # Open in a new terminal window
-        if [ -n "$TERMINAL" ]; then
-            $TERMINAL -e "cd '$2' && micro" &
-        else
-            micro "$2"
-        fi
-        ;;
-    *)
-        echo "Unknown command: $1" >&2
-        exit 1
-        ;;
-esac
-```
-
-2. Update [adapters/manifest.sh](cci:7://file:///Users/neopilot/neopilot-branchops/adapters/manifest.sh:0:0-0:0) to include your new adapter.
+- `BRANCHOPS_DEBUG=1` - Enable detailed debug logging
+- `BRANCHOPS_EDITOR_DEFAULT` - Override default editor
+- `BRANCHOPS_AI_DEFAULT` - Override default AI tool
+- `BRANCHOPS_WORKTREES_DIR` - Override base directory for worktrees
 
 ## Troubleshooting
 
-### Debugging Adapters
+### Check Adapter Status
+
+Use the `adapter` command to see which tools are recognized and available in your PATH:
 
 ```bash
-# Enable debug output
-NEOPILOT_DEBUG=1 branchops create test --editor=your_editor
-
-# Check adapter availability
-branchops adapters list
+git branchops adapter
 ```
 
-### Common Issues
+### Permissions
 
-1. **Permission Denied**: Make sure your adapter script is executable:
-   ```bash
-   chmod +x adapters/editor/your_editor.sh
-   ```
+Ensure your custom adapter scripts are executable:
 
-2. **Command Not Found**: Ensure the editor/AI tool is installed and in your PATH
+```bash
+chmod +x adapters/editor/my-editor.sh
+```
 
-3. **Adapter Not Found**: Verify the adapter is listed in the appropriate array in [adapters/manifest.sh](cci:7://file:///Users/neopilot/neopilot-branchops/adapters/manifest.sh:0:0-0:0)
+## Best Practices
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for your adapter
-4. Submit a pull request
-
-## License
-
-[Your License Here]
+1. **Backgrounding**: For GUI editors, always run the command in the background (`&`) and redirect output to `/dev/null` to keep the terminal free.
+2. **Path Respect**: Use `$PATH` to find binaries instead of hardcoding absolute paths.
+3. **Workspace Support**: If your editor supports workspace files (like `.code-workspace`), use the third argument provided to the `open` command.

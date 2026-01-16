@@ -9,6 +9,8 @@ discover_repo_root() {
 # Resolve the base directory for worktrees (can be configured)
 resolve_base_dir() {
   local repo_root="$1"
+  local repo_name
+  repo_name=$(basename "$repo_root")
   local configured
   configured=$(cfg_get "branchops.worktrees.dir")
   if [ -n "$configured" ]; then
@@ -19,8 +21,8 @@ resolve_base_dir() {
       echo "$repo_root/$configured"
     fi
   else
-    # Default: .worktrees in repo root
-    echo "$repo_root/.worktrees"
+    # Default: sibling directory to repo root
+    echo "$(dirname "$repo_root")/${repo_name}-worktrees"
   fi
 }
 
@@ -45,8 +47,8 @@ resolve_default_branch() {
 # Sanitize branch name for use as a folder name
 sanitize_branch_name() {
   local name="$1"
-  # Replace slashes and other unsafe chars with dashes
-  echo "$name" | sed 's|[/\\:*?"<>|]| - |g' | tr ' ' '-' | sed 's/--/-/g'
+  # Replace slashes and other unsafe chars with dashes, then collapse multiple dashes
+  echo "$name" | sed 's|[/\\:*?"<>|]| - |g' | tr -s ' ' '-' | sed 's/--*/-/g' | sed 's/^-//;s/-$//'
 }
 
 # Get current branch of a directory

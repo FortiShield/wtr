@@ -1,35 +1,32 @@
 #!/usr/bin/env bash
-# Claude AI integration adapter
+# Gemini AI integration adapter
 
 cmd="$1"
 worktree_path="$2"
 
 # Configuration
-CLAUDE_API_KEY="${CLAUDE_API_KEY:-}"
-CLAUDE_MODEL="claude-3-opus-20240229"  # Default model
+GEMINI_API_KEY="${GEMINI_API_KEY:-}"
+GEMINI_MODEL="gemini-1.5-pro"  # Default model
 
 # Check for API key
-if [ -z "$CLAUDE_API_KEY" ]; then
+if [ -z "$GEMINI_API_KEY" ]; then
     # Try to load from config file
-    if [ -f "$HOME/.config/neopilot/claude" ]; then
+    if [ -f "$HOME/.config/neopilot/gemini" ]; then
         # shellcheck source=/dev/null
-        source "$HOME/.config/neopilot/claude"
+        source "$HOME/.config/neopilot/gemini"
     fi
     
-    if [ -z "$CLAUDE_API_KEY" ]; then
-        echo "Error: CLAUDE_API_KEY not set. Please set it in your environment or ~/.config/neopilot/claude" >&2
+    if [ -z "$GEMINI_API_KEY" ]; then
+        echo "Error: GEMINI_API_KEY not set. Please set it in your environment or ~/.config/neopilot/gemini" >&2
         exit 1
     fi
 fi
 
 # Helper function to make API calls
-claude_api() {
-    local endpoint="$1"
-    local data="$2"
+gemini_api() {
+    local data="$1"
     
-    curl -s -X POST "https://api.anthropic.com/v1/$endpoint" \
-        -H "x-api-key: $CLAUDE_API_KEY" \
-        -H "anthropic-version: 2023-06-01" \
+    curl -s -X POST "https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}" \
         -H "Content-Type: application/json" \
         -d "$data"
 }
@@ -51,24 +48,22 @@ case "$cmd" in
             
             prompt+="What should I work on next? Please provide specific suggestions."
             
-            # Call Claude API
-            response=$(claude_api "messages" '{
-                "model": "'"$CLAUDE_MODEL"'",
-                "max_tokens": 1000,
-                "messages": [
-                    {"role": "user", "content": "'"$prompt"'"}
-                ]
+            # Call Gemini API
+            response=$(gemini_api '{
+                "contents": [{
+                    "parts": [{"text": "'"$prompt"'"}]
+                }]
             }')
             
             # Extract and display the response
-            echo "🤖 Claude's suggestions:"
-            echo "$response" | jq -r '.content[0].text' 2>/dev/null || echo "Error parsing response"
+            echo "🤖 Gemini's suggestions:"
+            echo "$response" | jq -r '.candidates[0].content.parts[0].text' 2>/dev/null || echo "Error parsing response"
             
-            # Open browser to Claude's web interface
+            # Open browser to Gemini's web interface
             if command -v xdg-open >/dev/null; then
-                xdg-open "https://claude.ai/chat" >/dev/null 2>&1 &
+                xdg-open "https://gemini.google.com/app" >/dev/null 2>&1 &
             elif command -v open >/dev/null; then
-                open "https://claude.ai/chat" >/dev/null 2>&1 &
+                open "https://gemini.google.com/app" >/dev/null 2>&1 &
             fi
         else
             echo "Worktree path does not exist: $worktree_path" >&2
@@ -82,14 +77,14 @@ case "$cmd" in
             cd "$worktree_path" || exit 1
             
             # Get code statistics
-            file_count=$(find . -type f -name "*.py" -o -name "*.js" -o -name "*.go" -o -name "*.rs" | wc -l)
-            loc=$(find . -type f -name "*.py" -o -name "*.js" -o -name "*.go" -o -name "*.rs" | xargs wc -l 2>/dev/null | tail -n 1 | awk '{print $1}')
+            file_count=$(find . -type f -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.sh" | wc -l)
+            loc=$(find . -type f -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.sh" | xargs wc -l 2>/dev/null | tail -n 1 | awk '{print $1}')
             
             # Prepare analysis prompt
             prompt="Analyze this codebase and provide insights:\n"
             prompt+="- Files: $file_count\n"
             prompt+="- Lines of code: $loc\n\n"
-            prompt+="Project structure:\n$(find . -type d | sort | sed 's|[^/]*/|- |g' | head -n 20)\n\n"
+            prompt+="Project structure:\n$(find . -type d -maxdepth 2 | sort | sed 's|[^/]*/|- |g' | head -n 20)\n\n"
             
             if [ -f "package.json" ]; then
                 prompt+="Dependencies:\n$(jq -r '.dependencies | to_entries[] | .key + ": " + .value' package.json 2>/dev/null | head -n 10)\n\n"
@@ -97,17 +92,15 @@ case "$cmd" in
             
             prompt+="What are the main components of this project? Any potential improvements or areas of concern?"
             
-            # Call Claude API
-            response=$(claude_api "messages" '{
-                "model": "'"$CLAUDE_MODEL"'",
-                "max_tokens": 1500,
-                "messages": [
-                    {"role": "user", "content": "'"$prompt"'"}
-                ]
+            # Call Gemini API
+            response=$(gemini_api '{
+                "contents": [{
+                    "parts": [{"text": "'"$prompt"'"}]
+                }]
             }')
             
             echo "📊 Codebase Analysis:"
-            echo "$response" | jq -r '.content[0].text' 2>/dev/null || echo "Error parsing response"
+            echo "$response" | jq -r '.candidates[0].content.parts[0].text' 2>/dev/null || echo "Error parsing response"
         fi
         ;;
         
