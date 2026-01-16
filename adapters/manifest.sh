@@ -16,6 +16,7 @@ AVAILABLE_EDITORS=(
     "atom"          # Atom
     "sublime"       # Sublime Text
     "nano"          # Nano
+    "antigravity"   # Google Antigravity
 )
 
 # Available AI tools
@@ -28,6 +29,7 @@ AVAILABLE_AI=(
     "gemini"        # Google Gemini AI
     "cursor"        # Cursor AI editor
     "opencode"      # OpenCode Interpreter
+    "antigravity"   # Google Antigravity
 )
 
 # Verify an adapter exists
