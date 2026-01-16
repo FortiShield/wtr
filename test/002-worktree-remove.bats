@@ -4,12 +4,16 @@ setup() {
   TMP=$(mktemp -d)
   cd "$TMP"
   git init >/dev/null
+  git config --local init.defaultBranch main
   git commit --allow-empty -m "init" >/dev/null
-  BOP="$(pwd)/../../bin/branchops"
+  BOP="$BATS_TEST_DIRNAME/../bin/branchops"
   [ -f "$BOP" ] || skip "branchops binary not found at $BOP"
+
+  # Configure branchops to use .worktrees inside repo (legacy/test mode)
+  "$BOP" config set branchops.worktrees.dir ".worktrees" --local
   
   # Create a worktree for testing removal
-  git worktree add -b test-branch test-worktree >/dev/null 2>&1 || true
+  git worktree add -b test-branch .worktrees/test-worktree >/dev/null 2>&1 || true
 }
 
 teardown() {
@@ -26,7 +30,8 @@ teardown() {
 
 @test "remove existing worktree" {
   # First create a worktree to remove
-  "$BOP" create test-remove --editor=vscode
+  "$BOP" config set branchops.editor.default vscode --local
+  "$BOP" create test-remove --editor
   
   # Now try to remove it
   run "$BOP" remove test-remove

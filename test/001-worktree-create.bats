@@ -8,10 +8,21 @@ setup() {
   cd repo
   git init >/dev/null
   # create initial commit
+  git config --local init.defaultBranch main
   git commit --allow-empty -m "init" >/dev/null
+  
+  # Mock 'code' for vscode adapter
+  mkdir -p "$TMP/bin"
+  echo "#!/bin/bash" > "$TMP/bin/code"
+  chmod +x "$TMP/bin/code"
+  export PATH="$TMP/bin:$PATH"
+
   # symlink the cli to PATH (adjust path to your project during CI)
-  BOP="$(pwd)/../../bin/branchops"
+  BOP="$BATS_TEST_DIRNAME/../bin/branchops"
   [ -f "$BOP" ] || skip "branchops binary not found at $BOP"
+  
+  # Configure branchops to use .worktrees inside repo (legacy/test mode)
+  "$BOP" config set branchops.worktrees.dir ".worktrees" --local
 }
 
 teardown() {
@@ -19,13 +30,15 @@ teardown() {
 }
 
 @test "create worktree (dry-run) succeeds without side effects" {
-  NEOPILOT_DRY_RUN=1 run "$BOP" create feature/test --editor=vscode
+  "$BOP" config set branchops.editor.default vscode --local
+  NEOPILOT_DRY_RUN=1 run "$BOP" create feature/test --editor
   [ "$status" -eq 0 ]
   [[ "${output}" =~ "dry-run" ]]
 }
 
 @test "create worktree with invalid editor fails" {
-  run "$BOP" create feature/test --editor=nonexistent-editor
+  "$BOP" config set branchops.editor.default nonexistent-editor --local
+  run "$BOP" create feature/test-fail --editor
   [ "$status" -ne 0 ]
   [[ "${output}" =~ "unknown editor" || "${output}" =~ "not available" ]]
 }
@@ -36,14 +49,18 @@ teardown() {
   git add .env
   git commit -m "Add .env" >/dev/null
   
-  NEOPILOT_DRY_RUN=1 run "$BOP" create feature/test --copy=.env
+  # Configure copy
+  "$BOP" config add branchops.copy.include ".env" --local
+  
+  NEOPILOT_DRY_RUN=1 run "$BOP" create feature/test-copy
   [ "$status" -eq 0 ]
   [[ "${output}" =~ "copy" ]]
   [[ "${output}" =~ ".env" ]]
 }
 
 @test "create worktree with AI integration" {
-  NEOPILOT_DRY_RUN=1 run "$BOP" create feature/test --ai=aider
+  "$BOP" config set branchops.ai.default aider --local
+  NEOPILOT_DRY_RUN=1 run "$BOP" create feature/test-ai --ai
   [ "$status" -eq 0 ]
   [[ "${output}" =~ "aider" ]]
 }

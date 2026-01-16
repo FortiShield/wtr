@@ -1781,7 +1781,13 @@ load_ai_adapter() {
       ai_start() {
         local path="$1"
         shift
-        (cd "$path" && "$adapter_file" open "$@")
+        local cmd="open"
+        # If first argument is not a flag, treat it as the command (e.g. "analyze")
+        if [ $# -gt 0 ] && [[ "$1" != -* ]]; then
+          cmd="$1"
+          shift
+        fi
+        "$adapter_file" "$cmd" "$path" "$@"
       }
     else
       . "$adapter_file"

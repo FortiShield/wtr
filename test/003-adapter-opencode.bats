@@ -10,8 +10,22 @@ setup() {
   chmod +x "$TMP/bin/opencode"
   export PATH="$TMP/bin:$PATH"
 
+  # Setup git repo
+  cd "$TMP"
+  git init >/dev/null
+  git config --local init.defaultBranch main
+  git commit --allow-empty -m "init" >/dev/null
+  
+  # Allow branchops to accept "current-branch" (which doesn't exist)? 
+  # Actually, "current-branch" is just an argument. If we pass ".", it might work?
+  # Or we need to create a dummy directory acting as worktree.
+  mkdir -p "$TMP/worktree"
+  
   # Setup branchops env
-  BOP="$(pwd)/bin/branchops"
+  BOP="$BATS_TEST_DIRNAME/../bin/branchops"
+
+  # Configure branchops
+  "$BOP" config set branchops.worktrees.dir ".worktrees" --local
 }
 
 teardown() {
@@ -19,8 +33,8 @@ teardown() {
 }
 
 @test "opencode adapter: open command" {
-  export BRANCHOPS_DIR="$(pwd)"
-  run "$BOP" ai current-branch --ai opencode -- open --test-flag
+  export BRANCHOPS_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
+  run "$BOP" ai 1 --ai opencode -- open --test-flag
   
   # It should find the mock opencode and run it
   [ "$status" -eq 0 ]
@@ -28,8 +42,8 @@ teardown() {
 }
 
 @test "opencode adapter: analyze command" {
-  export BRANCHOPS_DIR="$(pwd)"
-  run "$BOP" ai current-branch --ai opencode -- analyze --deep
+  export BRANCHOPS_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
+  run "$BOP" ai 1 --ai opencode -- analyze --deep
   
   [ "$status" -eq 0 ]
   [[ "$output" =~ "MOCK_OPENCODE_CALLED with args: analyze --deep" ]]
