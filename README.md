@@ -327,7 +327,7 @@ cd mcp-server && npm install && npm run build
   "mcpServers": {
     "wtr": {
       "command": "node",
-      "args": ["/path/to/wtr/mcp-server/dist/index.js"]
+      "args": ["/path/to/wtr/mcp/dist/index.js"]
     }
   }
 }
@@ -343,7 +343,7 @@ cd mcp-server && npm install && npm run build
   "wtr": {
     "type": "stdio",
     "command": "node",
-    "args": ["/path/to/wtr/mcp-server/dist/index.js"]
+    "args": ["/path/to/wtr/mcp/dist/index.js"]
   }
 }
 ```
